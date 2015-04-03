@@ -15,9 +15,11 @@ JSON. For a request to update a directors attributes, there must be an
 MD5 sum of the director's livestream id in a header. This at least
 stops casual unauthorized access.
 
+The API endpoints are:
+* GET /directors, a listing of all directors
+* POST /directors, create a new director
+* GET /directors/:id, list a director
+* POST /directors/:id, update a director
 
 ## Implementation Details
 The express package is used to serve up the API.
-
-## Packages
-* express
