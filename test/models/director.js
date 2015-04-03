@@ -1,4 +1,5 @@
-var should   = require('should');
+var should = require('should');
+
 var Director = require('../../app/models/director');
 
 it('retrieves director data', function (done) {
