@@ -17,7 +17,7 @@ Director.prototype.getLivestreamFields = function (callback) {
       this.fields.dob       = body.dob;
     }
 
-    callback(ok);
+    callback && callback(ok);
   }.bind(this));
 };
 

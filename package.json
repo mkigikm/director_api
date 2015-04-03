@@ -13,8 +13,7 @@
     "request": "2.54.0"
   },
   "devDependencies": {
-    "mocha": "*",
-    "supertest": "*",
-    "should": "*"
+    "mocha": "2.2.1",
+    "should": "5.2.0"
   }
 }
