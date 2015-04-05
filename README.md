@@ -95,10 +95,11 @@ Lists a director:
 ### Response Codes
 
 | Code | Message      | Description                                 |
-|-------------------------------------------------------------------|
+|------|--------------|---------------------------------------------|
 | 200  | OK           | Invoked operation is executed successfully. |
 | 400  | Client Error | There are missing or invalid parameters for the requested operation. |
 | 401  | Unauthorized Client Error | The authorization header doesn't match the `livestream_id` |
+| 404  | Resource Not Found | The requested resource does not exist. |
 | 500  | Server Error | Server error may occur when there is an error with the local database or connecting to the livestream API. |
 
 
