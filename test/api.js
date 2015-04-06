@@ -2,7 +2,7 @@ var should   = require('should');
 var dbClient = require('../db');
 var request  = require('supertest');
 var app      = require('../app');
-var redis = require('redis');
+var md5      = require('MD5');
 
 beforeEach(function () {
   dbClient.flushdb();
@@ -75,6 +75,7 @@ describe('POST /directors/:id', function (done) {
     
     request(app)
       .post('/directors/777')
+      .set('Authorization', md5('Matt'))
       .send(toUpdate)
       .expect(200)
       .end(function (err, res) {
@@ -92,6 +93,7 @@ describe('POST /directors/:id', function (done) {
     
     request(app)
       .post('/directors/777')
+      .set('Authorization', md5('Matt'))
       .send(toUpdate)
       .expect(400, done);
   });
@@ -105,7 +107,20 @@ describe('POST /directors/:id', function (done) {
       .expect(404, done);
   });
   
-  it('responds with a 401 if unauthorized');
+  it('responds with a 401 if unauthorized', function (done) {
+    var toUpdate = {favorite_camera: 'Nikon'};
+    
+    request(app)
+      .post('/directors/777')
+      .set('Authorization', md5('Idontknow'))
+      .send(toUpdate)
+      .expect(401)
+      .end(function (err, res) {
+  	if (err) return done(err);
+	res.body.should.have.property('favorite_camera', 'Panasonic');
+	done();
+      });
+  });
 });
 
 describe('GET /directors', function (done) {
@@ -115,7 +130,8 @@ describe('GET /directors', function (done) {
       .expect(200)
       .end(function (err, res) {
 	if (err) return done(err);
-	res.should.have.lengthOf(2);
+	res.body.should.have.lengthOf(2);
+	done();
       });
   });
 });

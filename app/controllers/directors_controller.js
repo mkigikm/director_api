@@ -70,3 +70,14 @@ exports.update = function (req, res) {
     }
   });
 };
+
+exports.index = function (req, res) {
+  Director.allAsObjects(function (err, directors) {
+    if (!err) {
+      res.status(200);
+      res.json(directors);
+    } else {
+      statusWithMessage(res, 500, "internal server error");
+    }
+  });
+};
