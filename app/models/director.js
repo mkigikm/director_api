@@ -8,9 +8,21 @@ var Director = function (livestreamId) {
   this.fields = {livestream_id: livestreamId};
 };
 
-// callback takes in err. err is true if there is a database error
-Director.allAsJSON = function (callback) {
-  dbClient.sort(DIRECTORS_INDEX_KEY, 'by', 'nosort', 'get', '#', callback);
+// callback takes in err and results. err is a redis database error,
+// results is the directors as plain JS objects
+Director.allAsObjects = function (callback) {
+  dbClient.sort(
+    DIRECTORS_INDEX_KEY, 'by', 'nosort', 'get', '*',
+    function (err, results) {
+      if (!err) {
+	callback(err, results.map(function (director) {
+	  return JSON.parse(director);
+	}));
+      } else {
+	callback(err, null);
+      }
+    }
+  );
 };
 
 Director.prototype.redisKey = function () {

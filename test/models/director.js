@@ -19,6 +19,7 @@ beforeEach(function () {
       full_name: 'Lydia'
     })
   );
+  dbClient.sadd('directors:index', 'directors:777', 'directors:999');
 });
 
 after(function () {
@@ -127,9 +128,25 @@ describe('Director#save', function (done) {
 	done();
       });
     });
-  });
+  });      
 });
 
-describe('Director#allAsJSON', function (done) {
-  it('retrieves all the records as plain objects');
+describe('Director#allAsObjects', function (done) {
+  it('retrieves all the records as plain objects', function (done) {
+    Director.allAsObjects(function (err, results) {
+      results.should.have.lengthOf(2);
+      done();
+    });
+  });
+
+  it('retrieves newly saved directors', function (done) {
+    var vin = new Director('101010');
+
+    vin.save({}, function (err, valid) {
+      Director.allAsObjects(function (err, results) {
+	results.should.have.lengthOf(3);
+	done();
+      });
+    });
+  });
 });
