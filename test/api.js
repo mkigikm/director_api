@@ -132,6 +132,19 @@ describe('GET /directors', function (done) {
 });
 
 describe('GET /directors/:id', function (done) {
-  it('gets a directors info');
-  it('responds with a 404 if no director has that id');
+  it('gets a directors info', function (done) {
+    request(app)
+      .get('/directors/777')
+      .expect(200)
+      .end(function (err, res) {
+	if (err) return done(err);
+	res.body.should.have.property('full_name', 'Matt');
+      });
+  });
+  
+  it('responds with a 404 if no director has that id', function (done) {
+    request(app)
+      .get('/directors/776')
+      .expect(404, done);
+  });
 });
