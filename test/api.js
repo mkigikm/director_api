@@ -67,3 +67,12 @@ describe('POST /directors', function (done) {
       });
   });
 });
+
+describe('POST /directors/:id', function (done) {
+  it('allows authorized users to edit director info');
+  it('responds with a 400 if the format is incorrect');
+  it('responds with a 401 if unauthorized');
+});
+
+describe('GET /directors');
+describe('GET /directors/:id');
