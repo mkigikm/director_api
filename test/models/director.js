@@ -28,6 +28,7 @@ after(function () {
 describe('Director#fetchRemoteFields', function (done) {
   it('retrieves remote director data', function (done) {
     var cameron = new Director('6488824');
+    this.timeout(5000);
 
     cameron.fetchRemoteFields(function (err, statusCode) {
       cameron.fields.should.have.property('full_name', 'James Cameron')
@@ -38,6 +39,7 @@ describe('Director#fetchRemoteFields', function (done) {
 
   it('sets nothing when director is not found', function (done) {
     var nowhereMan = new Director('foo');
+    this.timeout(5000);
 
     nowhereMan.fetchRemoteFields(function (err, statusCode) {
       nowhereMan.should.not.have.property('full_name');
