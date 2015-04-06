@@ -13,8 +13,8 @@ Director.allAsJSON = function (callback) {
   dbClient.sort(DIRECTORS_INDEX_KEY, 'by', 'nosort', 'get', '#', callback);
 };
 
-Director.prototype.livestreamUrl = function () {
-  return API_URL + this.livestream_id;
+Director.prototype.redisKey = function () {
+  return 'directors:' + this.fields.livestream_id;
 };
 
 // callback takes in err and local. err is true if there is a database
@@ -28,24 +28,21 @@ Director.prototype.fetchLocalFields = function (callback) {
   }.bind(this));
 };
 
-Director.prototype.redisKey = function () {
-  return 'directors:' + this.livestream_id;
+Director.prototype.livestreamUrl = function () {
+  return API_URL + this.fields.livestream_id;
 };
 
-// callback takes in err and statusCode. err is true if there is an
-// error connecting to the livestream API, statusCode is the status
-// code of the HTTP request
+// callback takes in err and statusCode. err is the reply error object
+// and statusCode is the status code of the HTTP request
 Director.prototype.fetchRemoteFields = function (callback) {
   request(this.livestreamUrl(), function (err, res, body) {
-    err = err && res.statusCode !== 200;
-    
-    if (!err) {
+    if (!err && res.statusCode === 200) {
       body = JSON.parse(body);
       this.fields.full_name = body.full_name;
       this.fields.dob       = body.dob;
     }
 
-    callback && callback(err, res.statusCode);
+    callback && callback(err, res && res.statusCode);
   }.bind(this));
 };
 
@@ -86,7 +83,7 @@ Director.prototype.valid = function () {
 };
 
 Director.prototype.validCamera = function () {
-  var ok typeof this.fields.camera === "undefined" ||
+  var ok = typeof this.fields.camera === "undefined" ||
       typeof this.fields.camera === "string";
 
   if (!ok) this.errors().push("camera must be a string");

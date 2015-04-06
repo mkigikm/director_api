@@ -1,3 +1,5 @@
+var app = require('./app');
+
 var dbClient = require('redis').createClient();
 
 // You have to refer to different redis databases by integer. Using
@@ -5,4 +7,4 @@ var dbClient = require('redis').createClient();
 if (app.get('env') === 'development') dbClient.select(1);
 if (app.get('env') === 'test') dbClient.select(2);
 
-modules.exports = dbClient;
+module.exports = dbClient;
