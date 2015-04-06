@@ -87,7 +87,8 @@ Director.prototype.ensureDefaults = function () {
 };
 
 Director.prototype.errors = function (message) {
-  this.errors = this.errors || [];
+  this._errors = this._errors || [];
+  return this._errors;
 };
 
 Director.prototype.valid = function () {
@@ -113,7 +114,7 @@ Director.prototype.validFavoriteMovies = function () {
     });
   }
 
-  if (!ok) this.errors.push("favorite_movies must be an array of strings");
+  if (!ok) this.errors().push("favorite_movies must be an array of strings");
 
   return ok;
 };

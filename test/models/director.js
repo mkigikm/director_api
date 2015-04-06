@@ -23,28 +23,28 @@ after(function () {
   dbClient.flushdb();
 });
 
-// describe('Director#fetchRemoteFields', function (done) {
-//   it('retrieves remote director data', function (done) {
-//     var cameron = new Director('6488824');
+describe('Director#fetchRemoteFields', function (done) {
+  it('retrieves remote director data', function (done) {
+    var cameron = new Director('6488824');
 
-//     cameron.fetchRemoteFields(function (err, statusCode) {
-//       (cameron.fields.full_name).should.be.exactly('James Cameron')
-//       statusCode.should.be.exactly(200);
-//       done();
-//     });
-//   });
+    cameron.fetchRemoteFields(function (err, statusCode) {
+      (cameron.fields.full_name).should.be.exactly('James Cameron')
+      statusCode.should.be.exactly(200);
+      done();
+    });
+  });
 
-//   it('sets nothing when director is not found', function (done) {
-//     var nowhereMan = new Director('foo');
+  it('sets nothing when director is not found', function (done) {
+    var nowhereMan = new Director('foo');
 
-//     nowhereMan.fetchRemoteFields(function (err, statusCode) {
-//       nowhereMan.should.not.have.property('full_name');
-//       nowhereMan.should.not.have.property('dob');
-//       statusCode.should.be.exactly(404);
-//       done();
-//     });
-//   });
-// });
+    nowhereMan.fetchRemoteFields(function (err, statusCode) {
+      nowhereMan.should.not.have.property('full_name');
+      nowhereMan.should.not.have.property('dob');
+      statusCode.should.be.exactly(404);
+      done();
+    });
+  });
+});
 
 describe('Director#fetchLocalFields', function (done) {
   it('retrieves local director data', function (done) {
@@ -99,7 +99,25 @@ describe('Director#save', function (done) {
     });
   });
   
-  it('validates data types');
+  it('validates favorite_camera', function (done) {
+    var matt = new Director('777');
+    var fields = { favorite_camera: {camera: 'Nikon'} };
+
+    matt.save(fields, function (err, valid) {
+      valid.should.be.false;
+      done();
+    });
+  });
+  
+  it('validates favorite_movies', function (done) {
+    var matt = new Director('777');
+    var fields = { favorite_movies: ['Fight Club', null] };
+
+    matt.save(fields, function (err, valid) {
+      valid.should.be.false;
+      done();
+    });
+  });
 });
 
 describe('Director#allAsJSON', function (done) {
