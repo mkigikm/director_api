@@ -48,3 +48,25 @@ var save = function (director, fields, res) {
   });
 };
 
+exports.update = function (req, res) {
+    var director = new Director(req.params.id);
+
+  director.getLocalFields(function (err, local) {
+    if (!err && local) {
+      director.save(req.body, function (err) {
+	if (!err && director.valid) {
+	  res.status(200);
+	  res.json(director.fields);
+	} else if (err) {
+	  statusWithMessage(500, "internal server error");
+	} else {
+	  statusWithMessage(400, director.errors);
+	}
+      });
+    } else if (err) {
+      statusWithMessage(500, "internal server error");
+    } else {
+      statusWithMessage(404, "director not found");
+    }
+  });
+};

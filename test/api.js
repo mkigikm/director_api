@@ -69,10 +69,32 @@ describe('POST /directors', function (done) {
 });
 
 describe('POST /directors/:id', function (done) {
-  it('allows authorized users to edit director info');
+  it('allows authorized users to edit director info', function (done) {
+    var toUpdate = {favorite_camera: 'Nikon'};
+    
+    request(app)
+      .post('/directors/777')
+      .send(toUpdate)
+      .expect(200)
+      .end(function (err, res) {
+  	if (err) done(err);
+	res.body.should.have.property('favorite_camera', 'Nikon');
+	dbClient.get('directors:777', function (err, resp) {
+	  resp.should.match(/Nikon/);
+  	  done();
+	});
+      });
+  });
+  
   it('responds with a 400 if the format is incorrect');
   it('responds with a 401 if unauthorized');
 });
 
-describe('GET /directors');
-describe('GET /directors/:id');
+describe('GET /directors', function (done) {
+  it('responds with all directors');
+});
+
+describe('GET /directors/:id', function (done) {
+  it('gets a directors info');
+  it('responds with a 404 if no director has that id');
+});
