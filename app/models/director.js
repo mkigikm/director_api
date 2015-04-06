@@ -1,5 +1,6 @@
 var request  = require('request');
 var dbClient = require('../../db');
+var md5      = require('MD5');
 
 var API_URL = 'https://api.new.livestream.com/accounts/';
 var DIRECTORS_INDEX_KEY = 'directors:index';
@@ -130,6 +131,10 @@ Director.prototype.validFavoriteMovies = function () {
   if (!ok) this.errors().push("favorite_movies must be an array of strings");
 
   return ok;
+};
+
+Director.prototype.isAuthorized = function (key) {
+  return md5(this.fields.full_name) === key;
 };
 
 module.exports = Director;

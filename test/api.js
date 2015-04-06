@@ -114,12 +114,7 @@ describe('POST /directors/:id', function (done) {
       .post('/directors/777')
       .set('Authorization', md5('Idontknow'))
       .send(toUpdate)
-      .expect(401)
-      .end(function (err, res) {
-  	if (err) return done(err);
-	res.body.should.have.property('favorite_camera', 'Panasonic');
-	done();
-      });
+      .expect(401, done);
   });
 });
 

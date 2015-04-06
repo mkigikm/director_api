@@ -53,6 +53,11 @@ exports.update = function (req, res) {
 
   director.fetchLocalFields(function (err, local) {
     if (!err && local) {
+      if (!director.isAuthorized(req.headers.authorization)) {
+	statusWithMessage(res, 401, "not authorized");
+	return;
+      }
+      
       director.save(req.body, function (err, valid) {
 	if (!err && valid) {
 	  res.status(200);
