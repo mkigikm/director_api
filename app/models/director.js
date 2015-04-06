@@ -21,8 +21,13 @@ Director.prototype.redisKey = function () {
 // object, local is true if the director is in the local database
 Director.prototype.fetchLocalFields = function (callback) {
   dbClient.get(this.redisKey(), function (err, reply) {
-    var local = typeof reply === 'string';
-    local && (this.fields = JSON.parse(reply));
+    var local = typeof reply === 'string',
+	key, fields;
+    
+    if (local) {
+      fields = JSON.parse(reply);
+      for (key in fields) this.fields[key] = fields[key];
+    }
     
     callback && callback(err, local);
   }.bind(this));
@@ -46,30 +51,38 @@ Director.prototype.fetchRemoteFields = function (callback) {
   }.bind(this));
 };
 
-// callback takes in err and valid. err is true if there is a database
-// error, valid is true if the director was valid.
+// callback takes in err and valid. err is a redis database error
+// object, valid is true if the director was valid.
 Director.prototype.save = function (fields, callback) {
+  this.set(fields);
+  
   if (this.valid()) {
-    dbClient.multi()
-      .set(this.redisKey(), JSON.stringify(this.fields))
-      .sadd(DIRECTORS_INDEX_KEY, this.redisKey())
-      .exec(function (err) { callback(err, true) });
+    this.fetchLocalFields(function (err) {
+      err ? callback(err, true) : this.saveToDb(callback);
+    }.bind(this));
   } else {
-    callback(false, false);
+    callback(null, false);
   }
 };
 
-Director.prototype.ensureDefaults = function () {
-  this.fields.favorite_movies = this.fields.favorite_movies || [];
+Director.prototype.saveToDb = function (callback) {
+  dbClient.multi()
+    .set(this.redisKey(), JSON.stringify(this.fields))
+    .sadd(DIRECTORS_INDEX_KEY, this.redisKey())
+    .exec(function (err) { callback(err, true) });
 };
 
 Director.prototype.set = function (fields) {
   var key;
-  for (key in fields) this.fields[key] = fields[key];
+  
+  for (key in fields) {
+    if (key === 'favorite_camera' || key === 'favorite_movies') {
+      this.fields[key] = fields[key];
+    }
+  }
 };
 
 Director.prototype.ensureDefaults = function () {
-  this.fields.camera = this.fields.camera || "";
   this.fields.favorite_movies = this.fields.favorite_movies || [];
 };
 
@@ -79,19 +92,19 @@ Director.prototype.errors = function (message) {
 
 Director.prototype.valid = function () {
   this.ensureDefaults();
-  return this.validCamera() && this.validFavoriteMovies();
+  return this.validFavoriteCamera() && this.validFavoriteMovies();
 };
 
-Director.prototype.validCamera = function () {
-  var ok = typeof this.fields.camera === "undefined" ||
-      typeof this.fields.camera === "string";
+Director.prototype.validFavoriteCamera = function () {
+  var ok = typeof this.fields.favorite_camera === "undefined" ||
+      typeof this.fields.favorite_camera === "string";
 
-  if (!ok) this.errors().push("camera must be a string");
+  if (!ok) this.errors().push("favorite_camera must be a string");
 
   return ok;
 };
 
-Director.prototype.validMovies = function () {
+Director.prototype.validFavoriteMovies = function () {
   var ok = this.fields.favorite_movies instanceof Array;
 
   if (ok) {
@@ -106,3 +119,4 @@ Director.prototype.validMovies = function () {
 };
 
 module.exports = Director;
+
