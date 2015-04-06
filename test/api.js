@@ -2,6 +2,7 @@ var should   = require('should');
 var dbClient = require('../db');
 var request  = require('supertest');
 var app      = require('../app');
+var redis = require('redis');
 
 beforeEach(function () {
   dbClient.flushdb();
@@ -86,7 +87,17 @@ describe('POST /directors/:id', function (done) {
       });
   });
   
-  it('responds with a 400 if the format is incorrect');
+  it('responds with a 400 if the format is incorrect', function (done) {
+    var toUpdate = {favorite_camera: {camera: 'Nikon'}};
+    
+    request(app)
+      .post('/directors/777')
+      .send(toUpdate)
+      .expect(400, done);//function (err, res) {
+	//dbClient.get('directors:777', redis.print);
+	//done();
+      //});
+  });
   it('responds with a 401 if unauthorized');
 });
 
