@@ -139,6 +139,7 @@ describe('GET /directors/:id', function (done) {
       .end(function (err, res) {
 	if (err) return done(err);
 	res.body.should.have.property('full_name', 'Matt');
+	done();
       });
   });
   

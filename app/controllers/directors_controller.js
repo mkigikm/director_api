@@ -86,3 +86,18 @@ exports.index = function (req, res) {
     }
   });
 };
+
+exports.show = function (req, res) {
+  var director = new Director(req.params.id);
+
+  director.fetchLocalFields(function (err, local) {
+    if (!err && local) {
+      res.status(200);
+      res.json(director.fields);
+    } else if (err) {
+      statusWithMessage(res, 500, "internal server error");
+    } else {
+      statusWithMessage(res, 404, "no director found");
+    }
+  });
+};
