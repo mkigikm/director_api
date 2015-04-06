@@ -37,7 +37,7 @@ describe('POST /directors', function (done) {
       .send(cameron)
       .expect(200)
       .end(function (err, res) {
-  	if (err) done(err);
+  	if (err) return done(err);
 	res.body.should.have.property('full_name', 'James Cameron');
   	done();
       });
@@ -78,7 +78,7 @@ describe('POST /directors/:id', function (done) {
       .send(toUpdate)
       .expect(200)
       .end(function (err, res) {
-  	if (err) done(err);
+  	if (err) return done(err);
 	res.body.should.have.property('favorite_camera', 'Nikon');
 	dbClient.get('directors:777', function (err, resp) {
 	  resp.should.match(/Nikon/);
@@ -93,16 +93,31 @@ describe('POST /directors/:id', function (done) {
     request(app)
       .post('/directors/777')
       .send(toUpdate)
-      .expect(400, done);//function (err, res) {
-	//dbClient.get('directors:777', redis.print);
-	//done();
-      //});
+      .expect(400, done);
   });
+
+  it('responds with a 404 if the director is not found', function (done) {
+    var toUpdate = {favorite_camera: 'Nikon'};
+
+    request(app)
+      .post('/directors/776')
+      .send(toUpdate)
+      .expect(404, done);
+  });
+  
   it('responds with a 401 if unauthorized');
 });
 
 describe('GET /directors', function (done) {
-  it('responds with all directors');
+  it('responds with all directors', function (done) {
+    request(app)
+      .get('/directors')
+      .expect(200)
+      .end(function (err, res) {
+	if (err) return done(err);
+	res.should.have.lengthOf(2);
+      });
+  });
 });
 
 describe('GET /directors/:id', function (done) {
