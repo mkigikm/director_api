@@ -17,8 +17,8 @@ Director.prototype.redisKey = function () {
   return 'directors:' + this.fields.livestream_id;
 };
 
-// callback takes in err and local. err is true if there is a database
-// error, local is true if the director is in the local database
+// callback takes in err and local. err is a redis database error
+// object, local is true if the director is in the local database
 Director.prototype.fetchLocalFields = function (callback) {
   dbClient.get(this.redisKey(), function (err, reply) {
     var local = typeof reply === 'string';
