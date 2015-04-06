@@ -3,12 +3,14 @@ var should = require('should');
 var Director = require('../../app/models/director');
 var dbClient = require('../../db');
 
-before(function () {
+beforeEach(function () {
   dbClient.flushdb();
   dbClient.set(
     'directors:777',
     JSON.stringify({
-      full_name: 'Matt'
+      full_name: 'Matt',
+      favorite_camera: 'Panasonic',
+      favorite_movies: ['Casablanca']
     })
   );
   dbClient.set(
@@ -28,7 +30,7 @@ describe('Director#fetchRemoteFields', function (done) {
     var cameron = new Director('6488824');
 
     cameron.fetchRemoteFields(function (err, statusCode) {
-      (cameron.fields.full_name).should.be.exactly('James Cameron')
+      cameron.fields.should.have.property('full_name', 'James Cameron')
       statusCode.should.be.exactly(200);
       done();
     });
@@ -51,7 +53,7 @@ describe('Director#fetchLocalFields', function (done) {
     var matt = new Director('777');
 
     matt.fetchLocalFields(function (err, local) {
-      (matt.fields.full_name).should.be.exactly('Matt');
+      matt.fields.should.have.property('full_name', 'Matt');
       local.should.be.true;
       done();
     });
@@ -80,7 +82,7 @@ describe('Director#save', function (done) {
     matt.save(fields, function (err, valid) {
       valid.should.be.true;
       matt.fetchLocalFields(function (err, local) {
-	(matt.fields.favorite_camera).should.be.exactly('Sony F65');
+	matt.fields.should.have.property('favorite_camera', 'Sony F65');
 	done();
       });
     });
@@ -93,7 +95,7 @@ describe('Director#save', function (done) {
     matt.save(fields, function (err, valid) {
       valid.should.be.true;
       matt.fetchLocalFields(function (err, local) {
-	(matt.fields.full_name).should.be.exactly('Matt');
+	matt.fields.should.have.property('full_name', 'Matt');
 	done();
       });
     });
@@ -105,7 +107,10 @@ describe('Director#save', function (done) {
 
     matt.save(fields, function (err, valid) {
       valid.should.be.false;
-      done();
+      matt.fetchLocalFields(function (err, local) {
+	matt.fields.should.have.property('favorite_camera', 'Panasonic');
+	done();
+      });
     });
   });
   
@@ -115,7 +120,10 @@ describe('Director#save', function (done) {
 
     matt.save(fields, function (err, valid) {
       valid.should.be.false;
-      done();
+      matt.fetchLocalFields(function (err, local) {
+	matt.fields.should.have.property('favorite_movies').with.lengthOf(1);
+	done();
+      });
     });
   });
 });

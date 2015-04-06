@@ -58,6 +58,7 @@ Director.prototype.save = function (fields, callback) {
   
   if (this.valid()) {
     this.fetchLocalFields(function (err) {
+      this.set(fields);
       err ? callback(err, true) : this.saveToDb(callback);
     }.bind(this));
   } else {
