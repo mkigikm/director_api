@@ -12,7 +12,6 @@ var CREATE_ERROR_MESSAGES = {
 };
 
 exports.create = function (req, res) {
-  console.log(req.body);
   if (!_.isString(req.body.livestream_id)) {
     statusWithMessage(res, 400, "must specify a livestream_id");
     return;

@@ -1,6 +1,7 @@
-var should = require('should');
-
+var should   = require('should');
 var dbClient = require('../db');
+var request  = require('supertest');
+var app      = require('../app');
 
 beforeEach(function () {
   dbClient.flushdb();
@@ -23,4 +24,46 @@ beforeEach(function () {
 
 after(function () {
   dbClient.flushdb();
+});
+
+describe('POST /directors', function (done) {
+  it('allows for account registration', function (done) {
+    var cameron = {livestream_id: '6488824'};
+    this.timeout(10000);
+
+    request(app)
+      .post('/directors')
+      .send(cameron)
+      .expect(200)
+      .end(function (err, res) {
+  	if (err) done(err);
+	res.body.should.have.property('full_name', 'James Cameron');
+  	done();
+      });
+  });
+
+  it('responds with a 404 for an invalid account', function (done) {
+    var nowhereMan = {livestream_id: 'foo'};
+    this.timeout(10000);
+    
+    request(app)
+      .post('/directors')
+      .send(nowhereMan)
+      .expect(404, done);
+  });
+
+  it('responds with a 400 if the account is already created', function (done) {
+    var cameron = {livestream_id: '6488824'};
+    this.timeout(20000);
+
+    request(app)
+      .post('/directors')
+      .send(cameron)
+      .end(function () {
+	request(app)
+	  .post('/directors')
+	  .send(cameron)
+	  .expect(400, done);
+      });
+  });
 });
