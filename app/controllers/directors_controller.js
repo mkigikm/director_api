@@ -50,8 +50,29 @@ var createResponse = function (res, director, err, local, statusCode) {
   }
 };
 
+var setFields = function (director, fields) {
+  fields.favorite_camera && director.setFavoriteCamera(fields.favorite_camera);
+  
+  if (fields.favorite_movies) {
+    if (fields._action === "add") {
+      return director.addFavoriteMovies(fields.favorite_movies);
+    } else if (fields._action === "remove") {
+      return director.removeFavoriteMovies(fields.favorite_movies);
+    } else {
+      director.setFavoriteMovies(fields.favorite_movies);
+    }
+  }
+
+  return true;
+};
+
 var save = function (director, fields, res) {
-  director.save(fields, function (err, valid) {
+  if (!setFields(director, fields)) {
+    statusWithMessage(res, 400, "favorite_movies must be an array of strings");
+    return;
+  }
+    
+  director.save(function (err, valid) {
     if (err) {
       statusWithMessage(res, 500, "internal server error");
     } else if (!valid) {

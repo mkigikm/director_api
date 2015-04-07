@@ -5,10 +5,11 @@ var _        = require('underscore');
 var async    = require('async');
 
 var API_URL = 'https://api.new.livestream.com/accounts/';
+var REDIS_KEY = 'directors:';
 var DIRECTORS_INDEX_KEY = 'directors:index';
 
-var Director = function (livestreamId) {
-  this.fields = {livestream_id: livestreamId};
+var Director = function (fields) {
+  this.fields = fields;
 };
 
 // callback takes in err and results. err is a redis database error,
@@ -29,50 +30,46 @@ Director.allAsObjects = function (callback) {
 };
 
 Director.prototype.redisKey = function () {
-  return 'directors:' + this.fields.livestream_id;
+  return REDIS_KEY + this.fields.livestream_id;
 };
 
-// callback takes in err and local. err is a redis database error
-// object, local is true if the director is in the local database
-Director.prototype.fetchLocalFields = function (callback) {
-  dbClient.get(this.redisKey(), function (err, reply) {
-    var local = typeof reply === 'string',
-	key, fields;
+// callback takes in err and a director. err is a redis database error
+// object, director is the director from the redis database
+Director.prototype.findLocalById = function (livestream_id, callback) {
+  dbClient.get(REDIS_KEY + livestream_id, function (err, reply) {
+    var director = null;
     
-    if (local) {
-      fields = JSON.parse(reply);
-      for (key in fields) this.fields[key] = this.fields[key] || fields[key];
-    }
-
-    callback && callback(err, local);
-  }.bind(this));
+    _.isString(reply) && (director = new Director(JSON.parse(reply)));
+    callback(director);
+  });
 };
 
-Director.prototype.livestreamUrl = function () {
-  return API_URL + this.fields.livestream_id;
-};
-
-// callback takes in err and statusCode. err is the reply error object
-// and statusCode is the status code of the HTTP request
-Director.prototype.fetchRemoteFields = function (callback) {
-  request(this.livestreamUrl(), function (err, res, body) {
+// callback takes in err, statusCode, and the director. err is the
+// reply error object and statusCode is the status code of the HTTP
+// request
+Director.findRemoteById = function (livestream_id, callback) {
+  request(API_URL + livestream_id, function (err, res, body) {
+    var director = null,
+	fields = {};
+    
     if (!err && res.statusCode === 200) {
       body = JSON.parse(body);
-      this.fields.full_name = body.full_name;
-      this.fields.dob       = body.dob;
+      fields.full_name = body.full_name;
+      fields.dob       = body.dob;
+      
+      director = new Director(fields);
     }
 
-    callback && callback(err, res && res.statusCode);
+    callback(err, res && res.statusCode, director);
   }.bind(this));
 };
 
 // callback takes in err and valid. err is a redis database error
 // object, valid is true if the director was valid.
-Director.prototype.save = function (fields, callback) {
+Director.prototype.save = function (callback) {
   async.waterfall(
     [
       this.fetchLocalFields.bind(this),
-      this._setFetched.bind(this, fields),
       this._saveToDb.bind(this)
     ],
     function (err, valid) {
@@ -82,16 +79,6 @@ Director.prototype.save = function (fields, callback) {
   );
 };
 
-Director.prototype._setFetched = function (fields, local, callback) {
-  this.set(fields);
-
-  if (this.valid()) {
-    callback(null);
-  } else {
-    callback(true, false);
-  }
-};  
-
 Director.prototype._saveToDb = function (callback) {
   dbClient.multi()
     .set(this.redisKey(), JSON.stringify(this.fields))
@@ -99,14 +86,27 @@ Director.prototype._saveToDb = function (callback) {
     .exec(function (err) { callback(err, true) });
 };
 
-Director.prototype.set = function (fields) {
-  var key;
-  
-  for (key in fields) {
-    if (key === 'favorite_camera' || key === 'favorite_movies') {
-      this.fields[key] = fields[key];
-    }
-  }
+Director.prototype.setFavoriteCamera = function (favoriteCamera) {
+  favoriteCamera && (this.fields.favorite_camera = fields.favorite_camera);
+};
+
+Director.prototype.setFavoriteMovies = function (favoriteMovies) {
+  favoriteMovies && (this.fields.favoriteMovies = fields.favorite_movies);
+};
+
+Director.prototype.addFavoriteMovies = function (favoriteMovies) {
+  if (!_.isArray(favoriteMovies)) return false;
+
+  [].push.apply(this.fields.favorite_movies, favoriteMovies);
+};
+
+Director.prototype.removeFavoriteMovies = function (favoriteMovies) {
+  if (!_.isArray(favoriteMovies)) return false;
+
+  this.fields.favorite_movies = _.difference(
+    this.fields.favorite_movies,
+    favoriteMovies
+  );
 };
 
 Director.prototype.ensureDefaults = function () {

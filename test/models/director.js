@@ -28,12 +28,12 @@ after(function () {
   dbClient.flushdb();
 });
 
-describe('Director#fetchRemoteFields', function (done) {
+describe('Director#findByRemoteId', function (done) {
   it('retrieves remote director data', function (done) {
-    var cameron = new Director(api.jamesCameron.livestream_id),
-	livestream = api.jamesCameron.api();
+    var id            = api.jamesCameron.livestream_id,
+	livestreamApi = api.jamesCameron.api();
     
-    cameron.fetchRemoteFields(function (err, statusCode) {
+    Director.findRemoteById(id, function (err, statusCode, cameron) {
       cameron.fields.should.have.property('full_name', 'James Cameron')
       statusCode.should.be.exactly(200);
       done();
@@ -41,24 +41,22 @@ describe('Director#fetchRemoteFields', function (done) {
   });
 
   it('sets nothing when director is not found', function (done) {
-    var nowhereMan = new Director(api.nowhereMan.livestream_id),
-	livestream = api.nowhereMan.api();
+    var id            = api.nowhereMan.livestream_id,
+	livestreamApi = api.nowhereMan.api();
 
-    nowhereMan.fetchRemoteFields(function (err, statusCode) {
-      nowhereMan.should.not.have.property('full_name');
-      nowhereMan.should.not.have.property('dob');
+    Director.findRemoteById(id, function (err, statusCode, nowhereMan) {
+      should.not.exist(nowhereMan);
       statusCode.should.be.exactly(404);
       done();
     });
   });
 
   it('sets nothing when there is server error', function (done) {
-    var nowhereMan = new Director(api.livestreamDown.livestream_id),
-	livestream = api.livestreamDown.api();
+    var id            = api.livestreamDown.livestream_id,
+	livestreamApi = api.livestreamDown.api();
 
-    nowhereMan.fetchRemoteFields(function (err, statusCode) {
-      nowhereMan.should.not.have.property('full_name');
-      nowhereMan.should.not.have.property('dob');
+    Director.findRemoteById(id, function (err, statusCode, nowhereMan) {
+      should.not.exist(nowhereMan);
       statusCode.should.be.exactly(500);
       done();
     });
@@ -86,6 +84,11 @@ describe('Director#fetchLocalFields', function (done) {
       done();
     });
   });
+});
+
+describe('Director#setFavoriteCamera', function () {
+  it('updates fields.favorite_camera if passed a value');
+  it('does not set the fields.favorite_camera key if passed undefined');
 });
 
 describe('Director#save', function (done) {
