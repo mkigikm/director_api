@@ -162,8 +162,7 @@ describe('updating a director', function () {
 	matt.setFavoriteCamera('Sony F65');
 	matt.setFavoriteMovies(['Fight Club', 'The Matrix']);
 	
-	matt.save(function (err, valid) {
-	  valid.should.be.true;
+	matt.save(function (err) {
 	  Director.findLocalById(matt.fields.id, function (err, matt) {
 	    matt.fields.should.have.property('favorite_camera', 'Sony F65');
 	    matt.fields.favorite_movies.should.containDeep(
@@ -186,9 +185,9 @@ describe('Director#allAsObjects', function (done) {
   });
 
   it('retrieves newly saved directors', function (done) {
-    var vin = new Director('101010');
+    var vin = new Director({livestream_id: '101010'});
 
-    vin.save({}, function (err, valid) {
+    vin.save(function (err, valid) {
       Director.allAsObjects(function (err, results) {
 	results.should.have.lengthOf(3);
 	done();
@@ -199,7 +198,7 @@ describe('Director#allAsObjects', function (done) {
 
 describe('Director#isAuthorized', function () {
   it('only returns true if passed md5(full_name)', function () {
-    var matt = new Director('abcdef');
+    var matt = new Director({livestream_id: 'abcdef'});
     matt.fields.full_name = 'Matt';
     matt.isAuthorized(md5('Matt')).should.be.true;
     matt.isAuthorized(md5('Matf')).should.be.false;

@@ -64,15 +64,14 @@ Director.findRemoteById = function (livestream_id, callback) {
   }.bind(this));
 };
 
-// callback takes in err and valid. err is a redis database error
-// object, valid is true if the director was valid.
+// callback takes in redis database error
 Director.prototype.save = function (callback) {
   this.ensureDefaults();
   
   dbClient.multi()
     .set(this.redisKey(), JSON.stringify(this.fields))
     .sadd(DIRECTORS_INDEX_KEY, this.redisKey())
-    .exec(function (err) { callback(err, true) });
+    .exec(function (err) { callback(err) });
 };
 
 Director.prototype.setFavoriteCamera = function (favoriteCamera) {
