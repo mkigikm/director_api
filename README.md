@@ -3,7 +3,7 @@
 ## Description
 
 An API for allowing movie directors with
-[livestream](http://new.livestream.com) accounts to list there
+[livestream](http://new.livestream.com) accounts to list their
 favorite movies and cameras. Directors can
 * create accounts from existing livestream accounts
 * update their favorite movies
@@ -105,4 +105,21 @@ Lists a director:
 
 ## Implementation Details
 
-The express package is used to serve up the API.
+The express package is used to serve up the API. The directors are
+stored locally in a Redis database. The key for a director is
+`directors:livestream_id`, and the key `directors:index` is used to
+store a set of all director keys to allow for retreiving all directors
+at once. Rather than storing director attributes in the Redis datatype
+(such as using a hash for `full_name`, `dob`, etc. and a set for
+`favorite_movies`), the value for each director is simply a serialized
+JSON representation of the director. This allows for fast and simple
+retreival of directors with a minimal amount of parsing
+logic. However, it does mean that a directors attributes can't be
+accessed individually, the whole director object must be retreived to
+update anything, and the logic for making `favorite_movies` a set must
+be done in JavaScript rather than leveraging Redis sets. I considered
+these acceptable drawbacks for the scope of this API since the hardest
+operation will be indexing. Creation and updates only rely on one
+record with simple validation logic. However if it grows, the
+cost-benefit analysis may change, and it could eventually be
+beneficial to switch over to a full ORM for the director model.
