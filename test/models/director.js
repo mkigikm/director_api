@@ -28,7 +28,7 @@ after(function () {
   dbClient.flushdb();
 });
 
-describe('Director#findByRemoteId', function (done) {
+describe('Director#findRemoteById', function (done) {
   it('retrieves remote director data', function (done) {
     var id            = api.jamesCameron.livestream_id,
 	livestreamApi = api.jamesCameron.api();
@@ -63,24 +63,17 @@ describe('Director#findByRemoteId', function (done) {
   });
 });
 
-describe('Director#fetchLocalFields', function (done) {
+describe('Director#findLocalById', function (done) {
   it('retrieves local director data', function (done) {
-    var matt = new Director('777');
-
-    matt.fetchLocalFields(function (err, local) {
+    Director.findLocalById('777', function (err, matt) {
       matt.fields.should.have.property('full_name', 'Matt');
-      local.should.be.true;
       done();
     });
   });
 
   it('sets nothing when the director is not local', function (done) {
-    var nowhereMan = new Director('foo');
-
-    nowhereMan.fetchLocalFields(function (err, local) {
-      nowhereMan.should.not.have.property('full_name');
-      nowhereMan.should.not.have.property('dob');
-      local.should.be.false;
+    Director.findLocalById('foo', function (err, nowhereMan) {
+      should.not.exist(nowhereMan);
       done();
     });
   });

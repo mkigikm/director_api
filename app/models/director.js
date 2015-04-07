@@ -35,12 +35,12 @@ Director.prototype.redisKey = function () {
 
 // callback takes in err and a director. err is a redis database error
 // object, director is the director from the redis database
-Director.prototype.findLocalById = function (livestream_id, callback) {
+Director.findLocalById = function (livestream_id, callback) {
   dbClient.get(REDIS_KEY + livestream_id, function (err, reply) {
     var director = null;
     
     _.isString(reply) && (director = new Director(JSON.parse(reply)));
-    callback(director);
+    callback(null, director);
   });
 };
 
