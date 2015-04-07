@@ -1,7 +1,8 @@
-var should = require('should');
+var should   = require('should');
+var md5      = require('MD5');
+var dbClient = require('../../db');
 
 var Director = require('../../app/models/director');
-var dbClient = require('../../db');
 
 beforeEach(function () {
   dbClient.flushdb();
@@ -148,5 +149,16 @@ describe('Director#allAsObjects', function (done) {
 	done();
       });
     });
+  });
+});
+
+describe('Director#isAuthorized', function () {
+  it('only returns true if passed md5(full_name)', function () {
+    var matt = new Director('abcdef');
+    matt.fields.full_name = 'Matt';
+    matt.isAuthorized(md5('Matt')).should.be.true;
+    matt.isAuthorized(md5('Matf')).should.be.false;
+    matt.isAuthorized('Matt').should.be.false;
+    matt.isAuthorized('').should.be.false;
   });
 });
