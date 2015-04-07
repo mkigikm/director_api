@@ -1,6 +1,7 @@
 var request  = require('request');
 var dbClient = require('../../db');
 var md5      = require('MD5');
+var _        = require('underscore');
 
 var API_URL = 'https://api.new.livestream.com/accounts/';
 var DIRECTORS_INDEX_KEY = 'directors:index';

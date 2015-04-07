@@ -87,6 +87,9 @@ describe('Director#save', function (done) {
       valid.should.be.true;
       matt.fetchLocalFields(function (err, local) {
 	matt.fields.should.have.property('favorite_camera', 'Sony F65');
+	matt.fields.favorite_movies.should.containDeep(
+	  ['Fight Club', 'The Matrix']
+	);
 	done();
       });
     });
@@ -129,7 +132,28 @@ describe('Director#save', function (done) {
 	done();
       });
     });
-  });      
+  });
+
+  it('only saves unique favorite_movies', function (done) {
+    var matt = new Director('777');
+    var fields = {
+      favorite_movies: [
+	'Gone with the Wind',
+	'Gone with the Wind',
+	'Casablanca'
+      ]
+    };
+
+    matt.save(fields, function (err, valid) {
+      matt.fetchLocalFields(function (err, local) {
+	matt.fields.favorite_movies.should.containDeep(
+	  ['Gone with the Wind', 'Casablanca']
+	);
+	matt.fields.favorite_movies.should.have.lengthOf(2);
+	done();
+      });
+    });
+  });
 });
 
 describe('Director#allAsObjects', function (done) {
