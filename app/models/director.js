@@ -42,7 +42,7 @@ Director.prototype.fetchLocalFields = function (callback) {
       fields = JSON.parse(reply);
       for (key in fields) this.fields[key] = this.fields[key] || fields[key];
     }
-    
+
     callback && callback(err, local);
   }.bind(this));
 };
@@ -124,13 +124,8 @@ Director.prototype.validFavoriteCamera = function () {
 };
 
 Director.prototype.validFavoriteMovies = function () {
-  var ok = this.fields.favorite_movies instanceof Array;
-
-  if (ok) {
-    this.fields.favorite_movies.forEach(function (movie) {
-      ok = ok && _.isString(movie);
-    });
-  }
+  var ok = _.isArray(this.fields.favorite_movies) &&
+      _.all(this.fields.favorite_movies, _.isString);
 
   if (ok) {
     this.fields.favorite_movies = _.uniq(this.fields.favorite_movies);

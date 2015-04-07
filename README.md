@@ -123,3 +123,18 @@ operation will be indexing. Creation and updates only rely on one
 record with simple validation logic. However if it grows, the
 cost-benefit analysis may change, and it could eventually be
 beneficial to switch over to a full ORM for the director model.
+
+Inside `director_controller.js` I used the async package to refactor
+the controller actions. Because two async packages are being used
+(`request` for querying the livestream API and `redis` for accessing
+the local database), the initial implementations were spaghetti code,
+with the error handling logic mixed in with the next callback. The
+refactored versions centralized the error conditions using
+`async.waterfall` to pass to the next function.
+
+## Testing There is full unit test coverage for the `Director` model,
+and integration testing for the API. I didn't do unit testing on the
+controller since the integration tests check for the results from the
+API. The tests could be split up to unit testing of the controller
+functions, and integration testing that just checks for server
+responses to the API endpoints.

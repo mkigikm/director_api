@@ -1,4 +1,5 @@
 var _        = require('underscore');
+var async    = require('async');
 var Director = require('../models/director');
 
 var statusWithMessage = function (res, status, message) {
@@ -18,21 +19,35 @@ exports.create = function (req, res) {
   }
   
   var director = new Director(req.body.livestream_id);
-  director.fetchLocalFields(function (err, local) {
-    if (err) {
-      statusWithMessage(res, 500, "internal server error");
-    } else if (local) {
-      statusWithMessage(res, 400, "that account has already been created");
-    } else {
-      director.fetchRemoteFields(function (err, statusCode) {
-	if (!err && statusCode === 200) {
-	  save(director, {}, res);
+  async.waterfall(
+    [
+      director.fetchLocalFields.bind(director),
+      function (local, callback) {
+	if (local) {
+	  callback(true, true, null);
 	} else {
-	  statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
+	  callback(null);
 	}
-      });
-    }
-  });
+      },
+      director.fetchRemoteFields.bind(director),
+      function (statusCode, callback) {
+	callback(null, false, statusCode);
+      }
+    ],
+    createResponse.bind(null, res, director)
+  );
+};
+
+var createResponse = function (res, director, err, local, statusCode) {
+  if (_.isObject(err)) {
+    statusWithMessage(res, 500, 'internal server error');
+  } else if (local) {
+    statusWithMessage(res, 400, 'that account has already been created');
+  } else if (statusCode !== 200) {
+    statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
+  } else {
+    save(director, {}, res);
+  }
 };
 
 var save = function (director, fields, res) {
@@ -40,7 +55,7 @@ var save = function (director, fields, res) {
     if (err) {
       statusWithMessage(res, 500, "internal server error");
     } else if (!valid) {
-      statusWithMessage(res, 400, directors.errors());
+      statusWithMessage(res, 400, director.errors());
     } else {
       res.status(200);
       res.json(director.fields);
@@ -49,31 +64,31 @@ var save = function (director, fields, res) {
 };
 
 exports.update = function (req, res) {
-    var director = new Director(req.params.id);
+  var director = new Director(req.params.id);
 
-  director.fetchLocalFields(function (err, local) {
-    if (!err && local) {
-      if (!director.isAuthorized(req.headers.authorization)) {
-	statusWithMessage(res, 401, "not authorized");
-	return;
+  async.waterfall(
+    [
+      director.fetchLocalFields.bind(director),
+      function (local, callback) {
+	var authorized = director.isAuthorized(req.headers.authorization),
+	    err = !local || !authorized;
+	callback(err, local, authorized);
       }
-      
-      director.save(req.body, function (err, valid) {
-	if (!err && valid) {
-	  res.status(200);
-	  res.json(director.fields);
-	} else if (err) {
-	  statusWithMessage(res, 500, "internal server error");
-	} else {
-	  statusWithMessage(res, 400, director.errors());
-	}
-      });
-    } else if (err) {
-      statusWithMessage(res, 500, "internal server error");
-    } else {
-      statusWithMessage(res, 404, "director not found");
-    }
-  });
+    ],
+    updateResponse.bind(null, res, director, req.body)
+  );
+};
+
+var updateResponse = function (res, director, fields, err, local, authorized) {
+  if (_.isObject(err)) {
+    statusWithMessage(res, 500, 'internal server error');
+  } else if (!local) {
+    statusWithMessage(res, 404, 'director not found');
+  } else if (!authorized) {
+    statusWithMessage(res, 401, 'not authorized');
+  } else {
+    save(director, fields, res);
+  }
 };
 
 exports.index = function (req, res) {
