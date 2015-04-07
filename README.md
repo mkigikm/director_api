@@ -63,8 +63,18 @@ must be a JSON object with the values to update:
 
     {
 	  "favorite_camera": "SonyF65",
-	  "favorite_movies": ["Lawrence of Arabia", "Fantasia"]
+	  "favorite_movies": ["Lawrence of Arabia", "Fantasia"],
+	  "_action": <"add"|"remove">
 	}
+
+`"_action"` is an optional key that if present will change how
+`"favorite_movies"` is updated. Set to `"add"` it will add to the
+existing `"favorite_movies"` set, set to `"remove"` it will remove the
+movies from the existing `"favorite_movies"` set, and set to any other
+value (or not present) the existing `"favorite_movies"` set will be
+replaced. It has no effect on how `"favorite_camera"` is handled.
+
+Any attributes not present in the JSON object will not be updated.
 
 The request must include the header `Authorization: Bearer
 md5(FullNameOfTheAccountToModify)`, e.g. `Authorization: Bearer

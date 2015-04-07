@@ -2,6 +2,7 @@ var request  = require('request');
 var dbClient = require('../../db');
 var md5      = require('MD5');
 var _        = require('underscore');
+var async    = require('async');
 
 var API_URL = 'https://api.new.livestream.com/accounts/';
 var DIRECTORS_INDEX_KEY = 'directors:index';
@@ -68,22 +69,30 @@ Director.prototype.fetchRemoteFields = function (callback) {
 // callback takes in err and valid. err is a redis database error
 // object, valid is true if the director was valid.
 Director.prototype.save = function (fields, callback) {
-  this.set(fields);
-  
-  if (this.valid()) {
-    this.fetchLocalFields(function (err) {
-      if (err) {
-	callback(err, true)
-      } else {
-	this.saveToDb(callback);
-      }
-    }.bind(this));
-  } else {
-    callback(null, false);
-  }
+  async.waterfall(
+    [
+      this.fetchLocalFields.bind(this),
+      this._setFetched.bind(this, fields),
+      this._saveToDb.bind(this)
+    ],
+    function (err, valid) {
+      err = _.isObject(err) ? err : null;
+      callback(err, valid);
+    }
+  );
 };
 
-Director.prototype.saveToDb = function (callback) {
+Director.prototype._setFetched = function (fields, local, callback) {
+  this.set(fields);
+
+  if (this.valid()) {
+    callback(null);
+  } else {
+    callback(true, false);
+  }
+};  
+
+Director.prototype._saveToDb = function (callback) {
   dbClient.multi()
     .set(this.redisKey(), JSON.stringify(this.fields))
     .sadd(DIRECTORS_INDEX_KEY, this.redisKey())
