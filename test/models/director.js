@@ -1,4 +1,5 @@
 var should   = require('should');
+var api      = require('../helpers/livestream_api');
 var md5      = require('MD5');
 var dbClient = require('../../db');
 
@@ -29,9 +30,9 @@ after(function () {
 
 describe('Director#fetchRemoteFields', function (done) {
   it('retrieves remote director data', function (done) {
-    var cameron = new Director('6488824');
-    this.timeout(5000);
-
+    var cameron = new Director(api.jamesCameron.livestream_id),
+	livestream = api.jamesCameron.api();
+    
     cameron.fetchRemoteFields(function (err, statusCode) {
       cameron.fields.should.have.property('full_name', 'James Cameron')
       statusCode.should.be.exactly(200);
@@ -40,8 +41,8 @@ describe('Director#fetchRemoteFields', function (done) {
   });
 
   it('sets nothing when director is not found', function (done) {
-    var nowhereMan = new Director('foo');
-    this.timeout(5000);
+    var nowhereMan = new Director(api.nowhereMan.livestream_id),
+	livestream = api.nowhereMan.api();
 
     nowhereMan.fetchRemoteFields(function (err, statusCode) {
       nowhereMan.should.not.have.property('full_name');

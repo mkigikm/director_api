@@ -1,4 +1,5 @@
 var should   = require('should');
+var api      = require('./helpers/livestream_api');
 var dbClient = require('../db');
 var request  = require('supertest');
 var app      = require('../app');
@@ -29,8 +30,8 @@ after(function () {
 
 describe('POST /directors', function (done) {
   it('allows for account registration', function (done) {
-    var cameron = {livestream_id: '6488824'};
-    this.timeout(10000);
+    var cameron = {livestream_id: api.jamesCameron.livestream_id},
+	livestream = api.jamesCameron.api();
 
     request(app)
       .post('/directors')
@@ -44,8 +45,8 @@ describe('POST /directors', function (done) {
   });
 
   it('responds with a 404 for an invalid account', function (done) {
-    var nowhereMan = {livestream_id: 'foo'};
-    this.timeout(10000);
+    var nowhereMan = {livestream_id: api.nowhereMan.livestream_id},
+	livestream = api.nowhereMan.api();
     
     request(app)
       .post('/directors')
@@ -54,13 +55,14 @@ describe('POST /directors', function (done) {
   });
 
   it('responds with a 400 if the account is already created', function (done) {
-    var cameron = {livestream_id: '6488824'};
-    this.timeout(20000);
+    var cameron = {livestream_id: api.jamesCameron.livestream_id},
+	livestream = api.jamesCameron.api();
 
     request(app)
       .post('/directors')
       .send(cameron)
       .end(function () {
+	livestream = api.jamesCameron.api();
 	request(app)
 	  .post('/directors')
 	  .send(cameron)

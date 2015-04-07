@@ -132,9 +132,16 @@ with the error handling logic mixed in with the next callback. The
 refactored versions centralized the error conditions using
 `async.waterfall` to pass to the next function.
 
-## Testing There is full unit test coverage for the `Director` model,
+## Testing
+
+There is full unit test coverage for the `Director` model,
 and integration testing for the API. I didn't do unit testing on the
 controller since the integration tests check for the results from the
 API. The tests could be split up to unit testing of the controller
 functions, and integration testing that just checks for server
 responses to the API endpoints.
+
+The access to the livestream API is mocked through the `nock`
+package. This allows testing to not be reliant on the livestream API
+being up and responding quickly, and to tests not cause access to the
+server to be throttled.
