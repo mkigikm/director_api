@@ -40,7 +40,7 @@ Director.prototype.fetchLocalFields = function (callback) {
     
     if (local) {
       fields = JSON.parse(reply);
-      for (key in fields) this.fields[key] = fields[key];
+      for (key in fields) this.fields[key] = this.fields[key] || fields[key];
     }
     
     callback && callback(err, local);
@@ -72,8 +72,11 @@ Director.prototype.save = function (fields, callback) {
   
   if (this.valid()) {
     this.fetchLocalFields(function (err) {
-      this.set(fields);
-      err ? callback(err, true) : this.saveToDb(callback);
+      if (err) {
+	callback(err, true)
+      } else {
+	this.saveToDb(callback);
+      }
     }.bind(this));
   } else {
     callback(null, false);
@@ -113,7 +116,7 @@ Director.prototype.valid = function () {
 
 Director.prototype.validFavoriteCamera = function () {
   var ok = typeof this.fields.favorite_camera === "undefined" ||
-      typeof this.fields.favorite_camera === "string";
+      _.isString(this.fields.favorite_camera);
 
   if (!ok) this.errors().push("favorite_camera must be a string");
 
@@ -125,11 +128,15 @@ Director.prototype.validFavoriteMovies = function () {
 
   if (ok) {
     this.fields.favorite_movies.forEach(function (movie) {
-      ok = ok && typeof movie === "string";
+      ok = ok && _.isString(movie);
     });
   }
 
-  if (!ok) this.errors().push("favorite_movies must be an array of strings");
+  if (ok) {
+    this.fields.favorite_movies = _.uniq(this.fields.favorite_movies);
+  } else {
+    this.errors().push("favorite_movies must be an array of strings");
+  }
 
   return ok;
 };

@@ -114,6 +114,8 @@ describe('Director#save', function (done) {
 
     matt.save(fields, function (err, valid) {
       valid.should.be.false;
+
+      matt = new Director('777');
       matt.fetchLocalFields(function (err, local) {
 	matt.fields.should.have.property('favorite_camera', 'Panasonic');
 	done();
@@ -127,8 +129,11 @@ describe('Director#save', function (done) {
 
     matt.save(fields, function (err, valid) {
       valid.should.be.false;
+      
+      matt = new Director('777');
       matt.fetchLocalFields(function (err, local) {
-	matt.fields.should.have.property('favorite_movies').with.lengthOf(1);
+	matt.fields.favorite_movies.should.containDeep(['Casablanca']);
+	matt.fields.favorite_movies.should.have.lengthOf(1);
 	done();
       });
     });
