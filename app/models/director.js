@@ -67,19 +67,8 @@ Director.findRemoteById = function (livestream_id, callback) {
 // callback takes in err and valid. err is a redis database error
 // object, valid is true if the director was valid.
 Director.prototype.save = function (callback) {
-  async.waterfall(
-    [
-      this.fetchLocalFields.bind(this),
-      this._saveToDb.bind(this)
-    ],
-    function (err, valid) {
-      err = _.isObject(err) ? err : null;
-      callback(err, valid);
-    }
-  );
-};
-
-Director.prototype._saveToDb = function (callback) {
+  this.ensureDefaults();
+  
   dbClient.multi()
     .set(this.redisKey(), JSON.stringify(this.fields))
     .sadd(DIRECTORS_INDEX_KEY, this.redisKey())
@@ -87,62 +76,51 @@ Director.prototype._saveToDb = function (callback) {
 };
 
 Director.prototype.setFavoriteCamera = function (favoriteCamera) {
-  favoriteCamera && (this.fields.favorite_camera = fields.favorite_camera);
+  if (typeof favoriteCamera !== "undefined" && !_.isString(favoriteCamera))
+    return false;
+
+  favoriteCamera && (this.fields.favorite_camera = favoriteCamera);
+  return true;
+};
+
+Director.prototype._validFavoriteMovies = function (favoriteMovies) {
+  return _.isArray(favoriteMovies) && _.all(favoriteMovies, _.isString);
 };
 
 Director.prototype.setFavoriteMovies = function (favoriteMovies) {
-  favoriteMovies && (this.fields.favoriteMovies = fields.favorite_movies);
+  if (typeof favoriteMovies === "undefined") return true;
+  
+  if (!this._validFavoriteMovies(favoriteMovies)) return false;
+     
+  favoriteMovies && (this.fields.favorite_movies = _.uniq(favoriteMovies));
+  return true;
 };
 
 Director.prototype.addFavoriteMovies = function (favoriteMovies) {
-  if (!_.isArray(favoriteMovies)) return false;
+  if (typeof favoriteMovies === "undefined") return true;
+  
+  if (!this._validFavoriteMovies(favoriteMovies)) return false;
 
   [].push.apply(this.fields.favorite_movies, favoriteMovies);
+  this.fields.favorite_movies = _.uniq(favoriteMovies);
+  return true;
 };
 
 Director.prototype.removeFavoriteMovies = function (favoriteMovies) {
-  if (!_.isArray(favoriteMovies)) return false;
+  if (typeof favoriteMovies === "undefined") return true;
+  
+  if (!this._validFavoriteMovies(favoriteMovies)) return false;
 
   this.fields.favorite_movies = _.difference(
     this.fields.favorite_movies,
     favoriteMovies
   );
+
+  return true;
 };
 
 Director.prototype.ensureDefaults = function () {
   this.fields.favorite_movies = this.fields.favorite_movies || [];
-};
-
-Director.prototype.errors = function (message) {
-  this._errors = this._errors || [];
-  return this._errors;
-};
-
-Director.prototype.valid = function () {
-  this.ensureDefaults();
-  return this.validFavoriteCamera() && this.validFavoriteMovies();
-};
-
-Director.prototype.validFavoriteCamera = function () {
-  var ok = typeof this.fields.favorite_camera === "undefined" ||
-      _.isString(this.fields.favorite_camera);
-
-  if (!ok) this.errors().push("favorite_camera must be a string");
-
-  return ok;
-};
-
-Director.prototype.validFavoriteMovies = function () {
-  var ok = _.isArray(this.fields.favorite_movies) &&
-      _.all(this.fields.favorite_movies, _.isString);
-
-  if (ok) {
-    this.fields.favorite_movies = _.uniq(this.fields.favorite_movies);
-  } else {
-    this.errors().push("favorite_movies must be an array of strings");
-  }
-
-  return ok;
 };
 
 Director.prototype.isAuthorized = function (key) {

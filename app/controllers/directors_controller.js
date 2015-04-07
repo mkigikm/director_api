@@ -13,32 +13,33 @@ var CREATE_ERROR_MESSAGES = {
 };
 
 exports.create = function (req, res) {
-  if (!_.isString(req.body.livestream_id)) {
+  var id = req.body.livestream_id;
+  
+  if (!_.isString(id)) {
     statusWithMessage(res, 400, "must specify a livestream_id");
     return;
   }
   
-  var director = new Director(req.body.livestream_id);
   async.waterfall(
     [
-      director.fetchLocalFields.bind(director),
-      function (local, callback) {
-	if (local) {
+      Director.findLocalById.bind(director),
+      function (director, callback) {
+	if (director) {
 	  callback(true, true, null);
 	} else {
 	  callback(null);
 	}
       },
-      director.fetchRemoteFields.bind(director),
-      function (statusCode, callback) {
-	callback(null, false, statusCode);
+      Director.findRemoteById.bind(id),
+      function (statusCode, director, callback) {
+	callback(null, false, statusCode, director);
       }
     ],
-    createResponse.bind(null, res, director)
+    createResponse.bind(null, res)
   );
 };
 
-var createResponse = function (res, director, err, local, statusCode) {
+var createResponse = function (res, err, local, statusCode, director) {
   if (_.isObject(err)) {
     statusWithMessage(res, 500, 'internal server error');
   } else if (local) {
@@ -46,7 +47,7 @@ var createResponse = function (res, director, err, local, statusCode) {
   } else if (statusCode !== 200) {
     statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
   } else {
-    save(director, {}, res);
+    save(director, res);
   }
 };
 
@@ -66,12 +67,7 @@ var setFields = function (director, fields) {
   return true;
 };
 
-var save = function (director, fields, res) {
-  if (!setFields(director, fields)) {
-    statusWithMessage(res, 400, "favorite_movies must be an array of strings");
-    return;
-  }
-    
+var save = function (director, res) {
   director.save(function (err, valid) {
     if (err) {
       statusWithMessage(res, 500, "internal server error");

@@ -63,7 +63,7 @@ describe('Director#findRemoteById', function (done) {
   });
 });
 
-describe('Director#findLocalById', function (done) {
+describe('Director#findLocalById', function () {
   it('retrieves local director data', function (done) {
     Director.findLocalById('777', function (err, matt) {
       matt.fields.should.have.property('full_name', 'Matt');
@@ -79,92 +79,99 @@ describe('Director#findLocalById', function (done) {
   });
 });
 
-describe('Director#setFavoriteCamera', function () {
-  it('updates fields.favorite_camera if passed a value');
-  it('does not set the fields.favorite_camera key if passed undefined');
-});
-
-describe('Director#save', function (done) {
-  it('updates the local fields', function (done) {
-    var matt = new Director('777');
-    var fields = {
-      favorite_camera: 'Sony F65',
-      favorite_movies: ['Fight Club', 'The Matrix']
-    };
-
-    matt.save(fields, function (err, valid) {
-      valid.should.be.true;
-      matt.fetchLocalFields(function (err, local) {
-	matt.fields.should.have.property('favorite_camera', 'Sony F65');
-	matt.fields.favorite_movies.should.containDeep(
-	  ['Fight Club', 'The Matrix']
-	);
-	done();
-      });
-    });
+describe('updating a director', function () {
+  var matt;
+  
+  beforeEach(function () {
+    matt = new Director({favorite_movies: ['Casablanca']});
   });
   
-  it('does not modify immutable fields', function (done) {
-    var matt = new Director('777');
-    var fields = { full_name: 'Matthew' };
-
-    matt.save(fields, function (err, valid) {
-      valid.should.be.true;
-      matt.fetchLocalFields(function (err, local) {
-	matt.fields.should.have.property('full_name', 'Matt');
-	done();
-      });
+  describe('Director#setFavoriteCamera', function () {
+    it('updates fields.favorite_camera if passed a value', function () {
+      matt.setFavoriteCamera('Nikon').should.be.true;
+      matt.fields.should.have.property('favorite_camera', 'Nikon');
     });
-  });
-  
-  it('validates favorite_camera', function (done) {
-    var matt = new Director('777');
-    var fields = { favorite_camera: {camera: 'Nikon'} };
-
-    matt.save(fields, function (err, valid) {
-      valid.should.be.false;
-
-      matt = new Director('777');
-      matt.fetchLocalFields(function (err, local) {
-	matt.fields.should.have.property('favorite_camera', 'Panasonic');
-	done();
-      });
-    });
-  });
-  
-  it('validates favorite_movies', function (done) {
-    var matt = new Director('777');
-    var fields = { favorite_movies: ['Fight Club', null] };
-
-    matt.save(fields, function (err, valid) {
-      valid.should.be.false;
-      
-      matt = new Director('777');
-      matt.fetchLocalFields(function (err, local) {
-	matt.fields.favorite_movies.should.containDeep(['Casablanca']);
-	matt.fields.favorite_movies.should.have.lengthOf(1);
-	done();
-      });
+    
+    it('does not set the fields.favorite_camera key if passed undefined',
+       function () {
+	 matt.setFavoriteCamera().should.be.true;
+	 matt.fields.should.not.have.property('favorite_camera');
+       });
+    
+    it('validates that favorite_camera is a string', function () {
+      matt.setFavoriteCamera({camera: 'Nikon'}).should.be.false;
+      matt.fields.should.not.have.property('favorite_camera');
     });
   });
 
-  it('only saves unique favorite_movies', function (done) {
-    var matt = new Director('777');
-    var fields = {
-      favorite_movies: [
-	'Gone with the Wind',
-	'Gone with the Wind',
-	'Casablanca'
-      ]
-    };
+  describe('Director#setFavoriteMovies', function () {
+    it('updates fields.favorite_movies if passed a value', function () {
+      matt.setFavoriteMovies(['Fight Club', 'The Matrix']).should.be.true;
+      matt.fields.favorite_movies.should.containDeep(
+	['Fight Club', 'The Matrix']
+      );
+    });
+    
+    it('does not set fields.favorite_movies if passed undefined', function () {
+      matt.setFavoriteMovies().should.be.true;
+      matt.fields.favorite_movies.should.have.lengthOf(1);
+    });
+    
+    it('validates that favorite_movies is an array of strings', function () {
+      matt.setFavoriteMovies([{movie: 'Fight Club'}, 'The Matrix'])
+	.should.be.false;
+      matt.fields.favorite_movies.should.have.lengthOf(1);
+    });
+    
+    it('only adds unique values to favorite_movies', function () {
+      matt.setFavoriteMovies(['Fight Club', 'Fight Club']).should.be.true;
+      matt.fields.favorite_movies.should.have.lengthOf(1);
+    });
+  });
 
-    matt.save(fields, function (err, valid) {
-      matt.fetchLocalFields(function (err, local) {
-	matt.fields.favorite_movies.should.containDeep(
-	  ['Gone with the Wind', 'Casablanca']
-	);
-	matt.fields.favorite_movies.should.have.lengthOf(2);
-	done();
+  describe('Director#addFavoriteMovies', function () {
+    it('adds new movies to favorite_movies', function () {
+      matt.setFavoriteMovies(['Fight Club', 'Casablanca']).should.be.true;
+      matt.fields.favorite_movies.should.have.lengthOf(2);
+            matt.fields.favorite_movies.should.containDeep(
+	['Fight Club', 'Casablanca']
+      );
+    });
+
+    it('validates that favorite_movies is an array of strings', function () {
+      matt.addFavoriteMovies([{movie: 'Fight Club'}]).should.be.false;
+      matt.fields.favorite_movies.should.have.lengthOf(1);
+    });
+  });
+
+  describe('Director#removeFavoriteMovies', function () {
+    it('removes movies from favorite_movies', function () {
+      matt.removeFavoriteMovies(['Casablanca']).should.be.true;
+      matt.fields.favorite_movies.should.have.lengthOf(0);
+    });
+
+    it('validates that favorite_movies is an array of strings', function () {
+      matt.removeFavoriteMovies([{movie: 'Casablanca'}]).should.be.false;
+      matt.fields.favorite_movies.should.have.lengthOf(1);
+    });
+  });
+
+  describe('Director#save', function () {
+    it('updates the local fields', function (done) {
+      Director.findLocalById('777', function (err, matt) {
+	matt.setFavoriteCamera('Sony F65');
+	matt.setFavoriteMovies(['Fight Club', 'The Matrix']);
+	
+	matt.save(function (err, valid) {
+	  valid.should.be.true;
+	  Director.findLocalById(matt.fields.id, function (err, matt) {
+	    matt.fields.should.have.property('favorite_camera', 'Sony F65');
+	    matt.fields.favorite_movies.should.containDeep(
+	      ['Fight Club', 'The Matrix']
+	    );
+	    done();
+	  });
+	});
       });
     });
   });
