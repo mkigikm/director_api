@@ -28,3 +28,12 @@ exports.nowhereMan =  {
       });
   }
 };
+
+exports.livestreamDown = {
+  livestream_id: nowhereManId,
+  api: function () {
+    return nock('https://api.new.livestream.com')
+      .get('/accounts/' + nowhereManId)
+      .reply(500, {});
+  }
+};

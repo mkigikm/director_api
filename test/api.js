@@ -54,6 +54,18 @@ describe('POST /directors', function (done) {
       .expect(404, done);
   });
 
+  it('responds with a 500 when there is a problem with the livestream api',
+     function (done) {
+       var nowhereMan = {livestream_id: api.livestreamDown.livestream_id},
+	livestream = api.livestreamDown.api();
+    
+       request(app)
+	 .post('/directors')
+	 .send(nowhereMan)
+	 .expect(500, done);
+     }
+    );
+
   it('responds with a 400 if the account is already created', function (done) {
     var cameron = {livestream_id: api.jamesCameron.livestream_id},
 	livestream = api.jamesCameron.api();

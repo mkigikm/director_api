@@ -144,4 +144,5 @@ responses to the API endpoints.
 The access to the livestream API is mocked through the `nock`
 package. This allows testing to not be reliant on the livestream API
 being up and responding quickly, and to tests not cause access to the
-server to be throttled.
+server to be throttled. It also allows me to simulate error on the
+livestream end by having my mock respond with 500 errors.

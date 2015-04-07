@@ -51,6 +51,18 @@ describe('Director#fetchRemoteFields', function (done) {
       done();
     });
   });
+
+  it('sets nothing when there is server error', function (done) {
+    var nowhereMan = new Director(api.livestreamDown.livestream_id),
+	livestream = api.livestreamDown.api();
+
+    nowhereMan.fetchRemoteFields(function (err, statusCode) {
+      nowhereMan.should.not.have.property('full_name');
+      nowhereMan.should.not.have.property('dob');
+      statusCode.should.be.exactly(500);
+      done();
+    });
+  });
 });
 
 describe('Director#fetchLocalFields', function (done) {
