@@ -18,13 +18,17 @@ tests are run, database 2 is flushed, so be careful about running the
 tests on a server that has a Redis database being used for something
 else.
 
-To run the test use the command
+To get started run
 
-	npm test
+	$ npm install
+
+To run the tests use the command
+
+	$ npm test
 
 and to run the server use the command
 
-	npm start
+	$ npm start
 
 ## API Details
 
