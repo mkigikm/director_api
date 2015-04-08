@@ -7,11 +7,7 @@ var _statusWithMessage = function (res, status, message) {
   res.json(message);
 };
 
-var CREATE_ERROR_MESSAGES = {
-  404: "no livestream account with that id",
-  500: "internal server error"
-};
-
+// action for POST /directors
 exports.create = function (req, res) {
   var id = req.body.livestream_id;
   
@@ -39,6 +35,11 @@ exports.create = function (req, res) {
   );
 };
 
+var CREATE_ERROR_MESSAGES = {
+  404: "no livestream account with that id",
+  500: "internal server error"
+};
+
 var _createResponse = function (res, err, local, statusCode, director) {
   if (_.isObject(err)) {
     _statusWithMessage(res, 500, 'internal server error');
@@ -62,6 +63,7 @@ var _save = function (director, res) {
   });
 };
 
+// action for POST /directors/:livestream_id
 exports.update = function (req, res) {
   Director.findLocalById(req.params.id, function (err, director) {
     if (err) {
@@ -93,6 +95,7 @@ var _updateResponse = function (res, fields, director) {
   }
 };
 
+// action for GET /directors
 exports.index = function (req, res) {
   Director.allAsObjects(function (err, directors) {
     if (!err) {
@@ -104,6 +107,7 @@ exports.index = function (req, res) {
   });
 };
 
+// action for GET /directors/:livestream_id
 exports.show = function (req, res) {
   Director.findLocalById(req.params.id, function (err, director) {
     if (!err && director) {

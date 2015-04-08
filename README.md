@@ -94,7 +94,7 @@ The request must include the header `Authorization: Bearer
 md5(FullNameOfTheAccountToModify)`, e.g. `Authorization: Bearer
 1bef1e4f8ea440a6323f9d25a5b4bd1b`.
 
-The response will be the directors JSON object:
+The response will be the director's JSON object:
 
 	{
 	  "livestream_id": "6488818",
@@ -131,9 +131,9 @@ Lists a director:
 
 The express package is used to serve up the API. The directors are
 stored locally in a Redis database. The key for a director is
-`directors:livestream_id`, and the key `directors:index` is used to
+`directors:<livestream_id>`, and the key `directors:index` is used to
 store a set of all director keys to allow for retreiving all directors
-at once. Rather than storing director attributes in the Redis datatype
+at once. Rather than storing director attributes in a Redis datatype
 (such as using a hash for `full_name`, `dob`, etc. and a set for
 `favorite_movies`), the value for each director is simply a serialized
 JSON representation of the director. This allows for fast and simple
@@ -144,7 +144,7 @@ update anything, and the logic for making `favorite_movies` a set must
 be done in JavaScript rather than leveraging Redis sets. I considered
 these acceptable drawbacks for the scope of this API since the slowest
 operation will be indexing. Creation and updates only rely on one
-record with simple validation logic. However if it grows, the
+record with simple validation logic. However, if the API grows, the
 cost-benefit analysis may change, and it could eventually be
 beneficial to switch over to a full ORM for the director model.
 
@@ -167,9 +167,9 @@ responses to the API endpoints.
 
 The access to the livestream API is mocked through the `nock`
 package. This allows testing to not be reliant on the livestream API
-being up and responding quickly, and to make tests cause access to the
-server to be throttled. It also allows me to simulate error on the
-livestream end by having my mock respond with 500 errors.
+being up and responding quickly, and to make tests hammer livestream's
+servers each time they're run. It also allows me to simulate error on
+the livestream end by having my mock respond with 500 errors.
 
 ## File Guide
 
@@ -178,20 +178,20 @@ made by the express generator.
 
 `db.js` sets up the connection to the Redis database.
 
-`app/controllers/directors_controller.js` the `create`, `update`,
+`app/controllers/directors_controller.js` has the `create`, `update`,
 `index`, and `show` actions called by the router.
 
-`app/models/directors.js` business logic, livestream API access, and
-Redis database access for the Director model.
+`app/models/directors.js` has the business logic, livestream API
+access, and Redis database access for the Director model.
 
-`bin/www` startup code for the server. Entirely made by the express
-generator.
+`bin/www` starts the server. Entirely made by the express generator.
 
-`routes/directors.js` the router that wires the API to the actions.
+`routes/directors.js` sets up the router that wires the API to the
+actions.
 
-`test/api.js` integration tests for the API.
+`test/api.js` has the integration tests for the API.
 
-`test/helpers/livestream_api.js` helper for mocking access to the
-livestream API.
+`test/helpers/livestream_api.js` has a helper for mocking access to
+the livestream API.
 
-`test/models/director.js` unit tests for the Director model.
+`test/models/director.js` has unit tests for the Director model.
