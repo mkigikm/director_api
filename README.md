@@ -144,8 +144,8 @@ refactored versions centralized the error conditions using
 
 ## Testing
 
-There is full unit test coverage for the `Director` model,
-and integration testing for the API. I didn't do unit testing on the
+There is full unit test coverage for the `Director` model, and
+integration testing for the API. I didn't do unit testing on the
 controller since the integration tests check for the results from the
 API. The tests could be split up to unit testing of the controller
 functions, and integration testing that just checks for server
@@ -167,8 +167,8 @@ made by the express generator.
 `app/controllers/directors_controller.js` the `create`, `update`,
 `index`, and `show` actions called by the router.
 
-`app/models/directors.js` business logic, remote API access, and Redis
-database access for the Director model.
+`app/models/directors.js` business logic, livestream API access, and
+Redis database access for the Director model.
 
 `bin/www` startup code for the server. Entirely made by the express
 generator.
