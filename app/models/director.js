@@ -8,8 +8,9 @@ var API_URL = 'https://api.new.livestream.com/accounts/';
 var REDIS_KEY = 'directors:';
 var DIRECTORS_INDEX_KEY = 'directors:index';
 
-var Director = function (fields) {
+var Director = function (id, fields) {
   this.fields = fields;
+  this.fields.livestream_id = id;
 };
 
 // callback takes in err and results. err is a redis database error,
@@ -39,7 +40,8 @@ Director.findLocalById = function (livestream_id, callback) {
   dbClient.get(REDIS_KEY + livestream_id, function (err, reply) {
     var director = null;
     
-    _.isString(reply) && (director = new Director(JSON.parse(reply)));
+    _.isString(reply) &&
+      (director = new Director(livestream_id, JSON.parse(reply)));
     callback(null, director);
   });
 };
@@ -57,7 +59,7 @@ Director.findRemoteById = function (livestream_id, callback) {
       fields.full_name = body.full_name;
       fields.dob       = body.dob;
       
-      director = new Director(fields);
+      director = new Director(livestream_id, fields);
     }
 
     callback(err, res && res.statusCode, director);

@@ -22,24 +22,24 @@ exports.create = function (req, res) {
   
   async.waterfall(
     [
-      Director.findLocalById.bind(director),
+      Director.findLocalById.bind(null, id),
       function (director, callback) {
 	if (director) {
-	  callback(true, true, null);
+	  callback(true, true);
 	} else {
 	  callback(null);
 	}
       },
-      Director.findRemoteById.bind(id),
+      Director.findRemoteById.bind(null, id),
       function (statusCode, director, callback) {
 	callback(null, false, statusCode, director);
       }
     ],
-    createResponse.bind(null, res)
+    _createResponse.bind(null, res)
   );
 };
 
-var createResponse = function (res, err, local, statusCode, director) {
+var _createResponse = function (res, err, local, statusCode, director) {
   if (_.isObject(err)) {
     statusWithMessage(res, 500, 'internal server error');
   } else if (local) {
@@ -47,7 +47,7 @@ var createResponse = function (res, err, local, statusCode, director) {
   } else if (statusCode !== 200) {
     statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
   } else {
-    save(director, res);
+    _save(director, res);
   }
 };
 
@@ -67,12 +67,10 @@ var setFields = function (director, fields) {
   return true;
 };
 
-var save = function (director, res) {
-  director.save(function (err, valid) {
+var _save = function (director, res) {
+  director.save(function (err) {
     if (err) {
       statusWithMessage(res, 500, "internal server error");
-    } else if (!valid) {
-      statusWithMessage(res, 400, director.errors());
     } else {
       res.status(200);
       res.json(director.fields);
@@ -81,30 +79,34 @@ var save = function (director, res) {
 };
 
 exports.update = function (req, res) {
-  var director = new Director(req.params.id);
-
-  async.waterfall(
-    [
-      director.fetchLocalFields.bind(director),
-      function (local, callback) {
-	var authorized = director.isAuthorized(req.headers.authorization),
-	    err = !local || !authorized;
-	callback(err, local, authorized);
-      }
-    ],
-    updateResponse.bind(null, res, director, req.body)
-  );
+  Director.findLocalById(req.params.id, function (err, director) {
+    if (err) {
+      statusWithMessage(res, 500, 'internal server error');
+    } else if (!director) {
+      statusWithMessage(res, 404, 'director not found');
+    } else if (!director.isAuthorized(req.headers.authorization)) {
+      statusWithMessage(res, 401, 'not authorized');
+    } else {
+      _updateResponse(res, req.body, director);
+    }
+  });
 };
 
-var updateResponse = function (res, director, fields, err, local, authorized) {
-  if (_.isObject(err)) {
-    statusWithMessage(res, 500, 'internal server error');
-  } else if (!local) {
-    statusWithMessage(res, 404, 'director not found');
-  } else if (!authorized) {
-    statusWithMessage(res, 401, 'not authorized');
+var UPDATE_METHODS = {
+  'add': 'addFavoriteMovies',
+  'remove': 'removeFavoriteMovies'
+};
+
+var _updateResponse = function (res, fields, director) {
+  var method = UPDATE_METHODS[fields._action] || 'setFavoriteMovies';
+  console.log(fields);
+
+  if (!director.setFavoriteCamera(fields.favorite_camera)) {
+    statusWithMessage(res, 400, 'favorite_camera must be a string');
+  } else if (!director[method](fields.favorite_movies)) {
+    statusWithMessage(res, 400, 'favorite_movies must be an array of strings');
   } else {
-    save(director, fields, res);
+    _save(director, res);
   }
 };
 
@@ -120,10 +122,8 @@ exports.index = function (req, res) {
 };
 
 exports.show = function (req, res) {
-  var director = new Director(req.params.id);
-
-  director.fetchLocalFields(function (err, local) {
-    if (!err && local) {
+  Director.findLocalById(req.params.id, function (err, director) {
+    if (!err && director) {
       res.status(200);
       res.json(director.fields);
     } else if (err) {
