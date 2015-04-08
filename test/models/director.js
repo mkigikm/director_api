@@ -131,7 +131,7 @@ describe('updating a director', function () {
 
   describe('Director#addFavoriteMovies', function () {
     it('adds new movies to favorite_movies', function () {
-      matt.setFavoriteMovies(['Fight Club', 'Casablanca']).should.be.true;
+      matt.addFavoriteMovies(['Fight Club']).should.be.true;
       matt.fields.favorite_movies.should.have.lengthOf(2);
             matt.fields.favorite_movies.should.containDeep(
 	['Fight Club', 'Casablanca']

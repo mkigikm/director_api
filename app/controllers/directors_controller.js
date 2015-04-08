@@ -2,7 +2,7 @@ var _        = require('underscore');
 var async    = require('async');
 var Director = require('../models/director');
 
-var statusWithMessage = function (res, status, message) {
+var _statusWithMessage = function (res, status, message) {
   res.status(status);
   res.json(message);
 };
@@ -16,7 +16,7 @@ exports.create = function (req, res) {
   var id = req.body.livestream_id;
   
   if (!_.isString(id)) {
-    statusWithMessage(res, 400, "must specify a livestream_id");
+    _statusWithMessage(res, 400, "must specify a livestream_id");
     return;
   }
   
@@ -41,36 +41,20 @@ exports.create = function (req, res) {
 
 var _createResponse = function (res, err, local, statusCode, director) {
   if (_.isObject(err)) {
-    statusWithMessage(res, 500, 'internal server error');
+    _statusWithMessage(res, 500, 'internal server error');
   } else if (local) {
-    statusWithMessage(res, 400, 'that account has already been created');
+    _statusWithMessage(res, 400, 'that account has already been created');
   } else if (statusCode !== 200) {
-    statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
+    _statusWithMessage(res, statusCode, CREATE_ERROR_MESSAGES[statusCode]);
   } else {
     _save(director, res);
   }
 };
 
-var setFields = function (director, fields) {
-  fields.favorite_camera && director.setFavoriteCamera(fields.favorite_camera);
-  
-  if (fields.favorite_movies) {
-    if (fields._action === "add") {
-      return director.addFavoriteMovies(fields.favorite_movies);
-    } else if (fields._action === "remove") {
-      return director.removeFavoriteMovies(fields.favorite_movies);
-    } else {
-      director.setFavoriteMovies(fields.favorite_movies);
-    }
-  }
-
-  return true;
-};
-
 var _save = function (director, res) {
   director.save(function (err) {
     if (err) {
-      statusWithMessage(res, 500, "internal server error");
+      _statusWithMessage(res, 500, "internal server error");
     } else {
       res.status(200);
       res.json(director.fields);
@@ -81,11 +65,11 @@ var _save = function (director, res) {
 exports.update = function (req, res) {
   Director.findLocalById(req.params.id, function (err, director) {
     if (err) {
-      statusWithMessage(res, 500, 'internal server error');
+      _statusWithMessage(res, 500, 'internal server error');
     } else if (!director) {
-      statusWithMessage(res, 404, 'director not found');
+      _statusWithMessage(res, 404, 'director not found');
     } else if (!director.isAuthorized(req.headers.authorization)) {
-      statusWithMessage(res, 401, 'not authorized');
+      _statusWithMessage(res, 401, 'not authorized');
     } else {
       _updateResponse(res, req.body, director);
     }
@@ -99,12 +83,11 @@ var UPDATE_METHODS = {
 
 var _updateResponse = function (res, fields, director) {
   var method = UPDATE_METHODS[fields._action] || 'setFavoriteMovies';
-  console.log(fields);
 
   if (!director.setFavoriteCamera(fields.favorite_camera)) {
-    statusWithMessage(res, 400, 'favorite_camera must be a string');
+    _statusWithMessage(res, 400, 'favorite_camera must be a string');
   } else if (!director[method](fields.favorite_movies)) {
-    statusWithMessage(res, 400, 'favorite_movies must be an array of strings');
+    _statusWithMessage(res, 400, 'favorite_movies must be an array of strings');
   } else {
     _save(director, res);
   }
@@ -116,7 +99,7 @@ exports.index = function (req, res) {
       res.status(200);
       res.json(directors);
     } else {
-      statusWithMessage(res, 500, "internal server error");
+      _statusWithMessage(res, 500, "internal server error");
     }
   });
 };
@@ -127,9 +110,9 @@ exports.show = function (req, res) {
       res.status(200);
       res.json(director.fields);
     } else if (err) {
-      statusWithMessage(res, 500, "internal server error");
+      _statusWithMessage(res, 500, "internal server error");
     } else {
-      statusWithMessage(res, 404, "no director found");
+      _statusWithMessage(res, 404, "no director found");
     }
   });
 };

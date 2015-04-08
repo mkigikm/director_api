@@ -85,7 +85,10 @@ describe('POST /directors', function (done) {
 
 describe('POST /directors/:id', function (done) {
   it('allows authorized users to edit director info', function (done) {
-    var toUpdate = {favorite_camera: 'Nikon'};
+    var toUpdate = {
+      favorite_camera: 'Nikon',
+      favorite_movies: ['Fight Club']
+    };
     
     request(app)
       .post('/directors/777')
@@ -94,9 +97,66 @@ describe('POST /directors/:id', function (done) {
       .expect(200)
       .end(function (err, res) {
   	if (err) return done(err);
+	
 	res.body.should.have.property('favorite_camera', 'Nikon');
+	res.body.favorite_movies.should.eql(['Fight Club']);
+	
 	dbClient.get('directors:777', function (err, resp) {
 	  resp.should.match(/Nikon/);
+	  resp.should.match(/Fight Club/);
+	  resp.should.not.match(/Casablanca/);
+  	  done();
+	});
+      });
+  });
+
+  it('adds to favorite_movies when requested to', function (done) {
+    var toUpdate = {
+      favorite_movies: ['Fight Club'],
+      _action: 'add'
+    };
+
+    request(app)
+      .post('/directors/777')
+      .set('Authorization', md5('Matt'))
+      .send(toUpdate)
+      .expect(200)
+      .end(function (err, res) {
+  	if (err) return done(err);
+	
+	res.body.favorite_movies.should.containDeep([
+	  'Casablanca',
+	  'Fight Club'
+	]);
+	
+	dbClient.get('directors:777', function (err, resp) {
+	  resp.should.match(/Panasonic/);
+	  resp.should.match(/Fight Club/);
+	  resp.should.match(/Casablanca/);
+  	  done();
+	});
+      });
+  });
+
+  it('removes from favorite_movies when requested to', function (done) {
+    var toUpdate = {
+      favorite_movies: ['Casablanca'],
+      _action: 'remove'
+    };
+
+    request(app)
+      .post('/directors/777')
+      .set('Authorization', md5('Matt'))
+      .send(toUpdate)
+      .expect(200)
+      .end(function (err, res) {
+  	if (err) return done(err);
+	
+	res.body.favorite_movies.should.have.lengthOf(0);
+	
+	dbClient.get('directors:777', function (err, resp) {
+	  resp.should.match(/Panasonic/);
+	  resp.should.not.match(/Casablanca/);
   	  done();
 	});
       });

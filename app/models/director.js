@@ -103,7 +103,7 @@ Director.prototype.addFavoriteMovies = function (favoriteMovies) {
   if (!this._validFavoriteMovies(favoriteMovies)) return false;
 
   [].push.apply(this.fields.favorite_movies, favoriteMovies);
-  this.fields.favorite_movies = _.uniq(favoriteMovies);
+  this.fields.favorite_movies = _.uniq(this.fields.favorite_movies);
   return true;
 };
 
