@@ -140,7 +140,7 @@ the controller actions. Because two async packages are being used
 the local database), the initial implementations were spaghetti code,
 with the error handling logic mixed in with the next callback. The
 refactored versions centralized the error conditions using
-`async.waterfall` to pass to the next function.
+`async.waterfall` to pass results to the next function.
 
 ## Testing
 
@@ -153,6 +153,31 @@ responses to the API endpoints.
 
 The access to the livestream API is mocked through the `nock`
 package. This allows testing to not be reliant on the livestream API
-being up and responding quickly, and to tests not cause access to the
+being up and responding quickly, and to make tests cause access to the
 server to be throttled. It also allows me to simulate error on the
 livestream end by having my mock respond with 500 errors.
+
+## File Guide
+
+`app.js` sets up express and mounts the directors controller. Mostly
+made by the express generator.
+
+`db.js` sets up the connection to the Redis database.
+
+`app/controllers/directors_controller.js` the `create`, `update`,
+`index`, and `show` actions called by the router.
+
+`app/models/directors.js` business logic, remote API access, and Redis
+database access for the Director model.
+
+`bin/www` startup code for the server. Entirely made by the express
+generator.
+
+`routes/directors.js` the router that wires the API to the actions.
+
+`test/api.js` integration tests for the API.
+
+`test/helpers/livestream_api.js` helper for mocking access to the
+livestream API.
+
+`test/models/director.js` unit tests for the Director model.
