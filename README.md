@@ -8,18 +8,27 @@ favorite movies and cameras. Directors can
 * create accounts from existing livestream accounts
 * update their favorite movies
 * update their favorite cameras
+
 Everyone can get a list of directors that have created accounts.
+
+Redis is used for the local database, and to run it will require a
+local Redis server with no access control. It uses three database, 0
+for production, 1 for development, and 2 for testing. Anytime the
+tests are run, database 2 is flushed, so be careful about running the
+tests on a server that has a Redis database being used for something
+else.
+
+To run the test use the command
+
+	npm test
+
+and to run the server use the command
+
+	npm start
 
 ## API Details
 
-Requests and responses to the API are made with JSON. For a request to
-update a directors attributes, there must be an MD5 sum of the
-director's livestream id in a header. This at least stops casual
-unauthorized access.
-
-### Api Endpoints
-
-#### GET /directors
+### GET /directors
 
 Returns a listing of all directors:
 
@@ -34,7 +43,7 @@ Returns a listing of all directors:
 	  ...
 	]
 
-#### POST /directors
+### POST /directors
 
 Creates a new director. The body of the post must be a JSON object
 with a valid livestream id:
@@ -48,13 +57,14 @@ Responds with the created director object:
     {
 	  "livestream_id": "6488818",
 	  "full_name": "Steven Speilberg",
-	  "dob": "2012‐06‐26T06:07:15.000Z"
+	  "dob": "2012‐06‐26T06:07:15.000Z",
+	  "favorite_movies": []
 	}
 
 The director with the livestream id must not have already been created
-on the system, otherwise the response will be a 422 error.
+on the system, otherwise the response will be a 400 error.
 
-#### POST /directors/:livestream_id
+### POST /directors/:livestream_id
 
 Updates a director. Only the `favorite_camera` and `favorite_movies`
 attributes can be updated. `livestream_id`, `full_name`, and `dob` are
@@ -90,7 +100,7 @@ The response will be the directors JSON object:
 	  "favorite_movies": ["Lawrence of Arabia", "Fantasia"]
 	}
 
-#### GET /directors/:livestream_id
+### GET /directors/:livestream_id
 
 Lists a director:
 
@@ -128,7 +138,7 @@ logic. However, it does mean that a directors attributes can't be
 accessed individually, the whole director object must be retreived to
 update anything, and the logic for making `favorite_movies` a set must
 be done in JavaScript rather than leveraging Redis sets. I considered
-these acceptable drawbacks for the scope of this API since the hardest
+these acceptable drawbacks for the scope of this API since the slowest
 operation will be indexing. Creation and updates only rely on one
 record with simple validation logic. However if it grows, the
 cost-benefit analysis may change, and it could eventually be
