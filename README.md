@@ -106,7 +106,7 @@ The response will be the director's JSON object:
 
 ### GET /directors/:livestream_id
 
-Lists a director:
+Returns a single director:
 
 	{
 	  "livestream_id": "6488818",
