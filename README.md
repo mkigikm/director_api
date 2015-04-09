@@ -32,6 +32,10 @@ and to run the server use the command
 
 ## API Details
 
+The body of all HTTP requests for this API is in JSON, so every POST
+request should have the header `Content-Type: application/json`,
+otherwise the request will not be processed (400 error).
+
 ### GET /directors
 
 Returns a listing of all directors:
